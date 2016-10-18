@@ -41,10 +41,10 @@
     return isgranted;
 }
 
-
-- (void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event{
+/** 通讯录基本访问*/
+- (void)copyAbaddressInfo{
     //判断是否需要授权
-    if (ABAddressBookGetAuthorizationStatus() == kABAuthorizationStatusAuthorized ) {
+    if (ABAddressBookGetAuthorizationStatus() != kABAuthorizationStatusAuthorized ) {
         return ;
     }
     //创建通讯录对象
@@ -54,7 +54,8 @@
     
     //打印联系人信息
     for (int i =0; i<CFArrayGetCount(allPeole); i++) {
-        [self pintPeople:CFArrayGetValueAtIndex(allPeole, i)];
+//        [self pintPeople:CFArrayGetValueAtIndex(allPeole, i)];
+        [self updatePeople:CFArrayGetValueAtIndex(allPeole, i) addressBook:addressBook];//更新
     }
     
 }
@@ -78,8 +79,43 @@
 }
 
 
+#pragma mark - 修改通讯录信息
+- (void)updatePeople:(ABRecordRef)people addressBook:(ABAddressBookRef)addressBook {
+    //修改姓名kABPersonFirstNameProperty
+    CFStringRef  personfirstName = @"kevin";
+    ABRecordSetValue(people, kABPersonFirstNameProperty, personfirstName, nil);
+    ABAddressBookSave(addressBook, nil);
+    
+}
 
 
+-(void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event{
+//    [self copyAbaddressInfo];
+    [self createAbaddressInfo];
+}
+
+#pragma mark - 新增联系人
+- (void)createAbaddressInfo{
+    ABRecordRef people = ABPersonCreate();
+    ABRecordSetValue(people, kABPersonFirstNameProperty, @"zhang", nil);
+    ABRecordSetValue(people, kABPersonLastNameProperty, @"kevin", nil);
+    //创建电话属性
+    ABMultiValueRef mobil = ABMultiValueCreateMutable(kABMultiStringPropertyType);
+    ABMultiValueAddValueAndLabel(mobil, @"18874054877", kABPersonPhoneMainLabel, nil);
+    ABMultiValueAddValueAndLabel(mobil, @"18874054872", kABPersonPhoneHomeFAXLabel, nil);
+    ABMultiValueAddValueAndLabel(mobil, @"18874054879", kABPersonPhoneIPhoneLabel, nil);
+    //设置电话信息到联系人
+    ABRecordSetValue(people, kABPersonPhoneProperty, mobil, nil);
+
+    //获取通讯录
+    ABAddressBookRef addressBook  = ABAddressBookCreateWithOptions(nil, nil);
+    
+    //添加联系人
+    ABAddressBookAddRecord(addressBook, people, nil);
+    ABAddressBookSave(addressBook, nil);
+    
+}
 
 
 @end
+
